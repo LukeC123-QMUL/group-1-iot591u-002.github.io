@@ -117,6 +117,50 @@ td input[type="number"] { text-align: center; }
     padding: 6px 8px;
 }
 
+/* Depends on tags */
+.deps-container { display: flex; flex-wrap: wrap; gap: 4px; align-items: center; }
+
+.dep-tag {
+    background: rgba(14, 99, 190, 0.1);
+    color: var(--imdb-blue);
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.dep-tag .remove-dep {
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.8rem;
+    line-height: 1;
+}
+
+.dep-tag .remove-dep:hover { color: var(--imdb-red); }
+
+.add-dep-btn {
+    background: none;
+    border: 1px dashed var(--border);
+    border-radius: 10px;
+    padding: 2px 8px;
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.add-dep-btn:hover { border-color: var(--imdb-gold); color: var(--imdb-gold); }
+
+.dep-select {
+    padding: 2px 6px;
+    border: 1px solid var(--imdb-gold);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    background: var(--bg);
+    color: var(--text);
+}
+
 /* Delete button */
 .delete-btn {
     background: none;

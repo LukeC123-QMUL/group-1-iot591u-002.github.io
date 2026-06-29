@@ -79,8 +79,63 @@
             durTd.appendChild(durInput);
             tr.appendChild(durTd);
 
-            // Dependencies (placeholder)
+            // Dependencies
             const depsTd = document.createElement('td');
+            const depsContainer = document.createElement('div');
+            depsContainer.classList.add('deps-container');
+
+            activity.dependencies.forEach(depId => {
+                const tag = document.createElement('span');
+                tag.classList.add('dep-tag');
+                tag.innerHTML = `${depId}<span class="remove-dep" data-dep="${depId}">×</span>`;
+                tag.querySelector('.remove-dep').addEventListener('click', () => {
+                    activity.dependencies = activity.dependencies.filter(d => d !== depId);
+                    renderTable();
+                });
+                depsContainer.appendChild(tag);
+            });
+
+            // Add dependency button
+            const availableDeps = activities
+                .map((_, idx) => generateId(idx))
+                .filter(aid => aid !== id && !activity.dependencies.includes(aid));
+
+            if (availableDeps.length > 0) {
+                const addDepBtn = document.createElement('button');
+                addDepBtn.classList.add('add-dep-btn');
+                addDepBtn.textContent = '+';
+                addDepBtn.addEventListener('click', () => {
+                    // Replace button with select
+                    const select = document.createElement('select');
+                    select.classList.add('dep-select');
+                    const placeholder = document.createElement('option');
+                    placeholder.value = '';
+                    placeholder.textContent = '...';
+                    select.appendChild(placeholder);
+                    availableDeps.forEach(aid => {
+                        const opt = document.createElement('option');
+                        opt.value = aid;
+                        opt.textContent = `${aid} - ${activities[activities.map((_, idx) => generateId(idx)).indexOf(aid)]?.name || ''}`;
+                        select.appendChild(opt);
+                    });
+                    addDepBtn.replaceWith(select);
+                    select.focus();
+                    select.addEventListener('change', () => {
+                        if (select.value) {
+                            activity.dependencies.push(select.value);
+                        }
+                        renderTable();
+                    });
+                    select.addEventListener('blur', () => renderTable());
+                });
+                depsContainer.appendChild(addDepBtn);
+            }
+
+            if (activity.dependencies.length === 0 && availableDeps.length === 0) {
+                depsContainer.innerHTML = '<span style="color:#999">None</span>';
+            }
+
+            depsTd.appendChild(depsContainer);
             tr.appendChild(depsTd);
 
             // Delete
@@ -98,6 +153,15 @@
 
     // --- Event listeners ---
     addBtn.addEventListener('click', addActivity);
+
+    // --- Initialise with sample data ---
+    activities = [
+        { name: 'Requirements Gathering', duration: 3, dependencies: [] },
+        { name: 'UI Design', duration: 4, dependencies: ['A'] },
+        { name: 'Database Design', duration: 5, dependencies: ['A'] },
+        { name: 'Backend Development', duration: 7, dependencies: ['B', 'C'] },
+        { name: 'Testing', duration: 3, dependencies: ['D'] }
+    ];
 
     renderTable();
 })();

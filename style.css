@@ -204,3 +204,24 @@ td input[type="number"] { text-align: center; }
 }
 
 .btn-success:hover { background: #e6b800; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--imdb-red);
+    color: #fff;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    opacity: 0;
+    transition: transform 0.3s, opacity 0.3s;
+    z-index: 2000;
+}
+
+.toast.visible {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}

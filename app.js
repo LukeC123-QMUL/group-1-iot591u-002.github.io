@@ -9,6 +9,7 @@
     const activityBody = document.getElementById('activity-body');
     const addBtn = document.getElementById('add-activity-btn');
     const calcBtn = document.getElementById('calculate-btn');
+    const toast = document.getElementById('error-toast');
 
     // --- ID generation ---
     function generateId(index) {
@@ -149,6 +150,13 @@
 
             activityBody.appendChild(tr);
         });
+    }
+
+    // --- Toast ---
+    function showError(msg) {
+        toast.textContent = msg;
+        toast.classList.add('visible');
+        setTimeout(() => toast.classList.remove('visible'), 3000);
     }
 
     // --- Event listeners ---

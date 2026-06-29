@@ -63,6 +63,49 @@ h1 { font-size: 1.5rem; margin-bottom: 4px; color: var(--imdb-black); }
     font-weight: 500;
 }
 
+/* Toggle */
+.toggle-row { margin-bottom: 12px; }
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: var(--text-muted);
+}
+
+.toggle-label input { display: none; }
+
+.toggle-switch {
+    width: 36px;
+    height: 20px;
+    background: #ccc;
+    border-radius: 10px;
+    position: relative;
+    transition: background 0.2s;
+}
+
+.toggle-switch::after {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #fff;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s;
+}
+
+.toggle-label input:checked + .toggle-switch {
+    background: var(--imdb-gold);
+}
+
+.toggle-label input:checked + .toggle-switch::after {
+    transform: translateX(16px);
+}
+
 /* Tables */
 .table-wrapper { overflow-x: auto; overflow-y: visible; }
 
@@ -115,6 +158,12 @@ td input[type="number"] { text-align: center; }
     background: var(--surface-alt);
     border-radius: 4px;
     padding: 6px 8px;
+}
+
+.duration-cell {
+    text-align: center;
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 /* Depends on tags */
@@ -174,6 +223,44 @@ td input[type="number"] { text-align: center; }
 
 .delete-btn:hover { color: var(--imdb-red); background: rgba(189, 36, 4, 0.1); }
 
+/* Duration help */
+.header-with-help { display: flex; align-items: center; gap: 6px; }
+
+.help-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: var(--border);
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    cursor: help;
+    font-weight: 700;
+    position: relative;
+    z-index: 100;
+}
+
+.help-icon:hover { background: var(--imdb-gold); color: var(--imdb-black); }
+
+.help-tooltip {
+    display: none;
+    position: fixed;
+    background: var(--imdb-black);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 400;
+    white-space: nowrap;
+    z-index: 9999;
+    pointer-events: none;
+    border: 1px solid var(--border);
+}
+
+.help-tooltip.visible { display: block; }
+
 /* Buttons */
 .btn-row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
 .spacer { flex: 1; }
@@ -204,6 +291,10 @@ td input[type="number"] { text-align: center; }
 }
 
 .btn-success:hover { background: #e6b800; }
+
+/* PERT column hiding */
+body.no-pert .pert-col { display: none; }
+body.no-pert .duration-cell { font-style: normal; color: var(--text); }
 
 /* Results table */
 .results-table th { background: var(--surface-alt); }

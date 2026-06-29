@@ -17,13 +17,28 @@
                 <span>1. Define Activities</span>
                 <span class="badge">Input</span>
             </div>
+            <div class="toggle-row">
+                <label class="toggle-label">
+                    <input type="checkbox" id="pert-toggle" checked>
+                    <span class="toggle-switch"></span>
+                    <span>Use PERT estimation (Optimistic / Most Likely / Pessimistic)</span>
+                </label>
+            </div>
             <div class="table-wrapper">
                 <table id="activity-table">
                     <thead>
                         <tr>
                             <th class="col-id">ID</th>
                             <th class="col-name">Activity Name</th>
-                            <th class="col-dur">Duration</th>
+                            <th class="col-est pert-col">Optimistic (O)</th>
+                            <th class="col-est pert-col">Most Likely (M)</th>
+                            <th class="col-est pert-col">Pessimistic (P)</th>
+                            <th class="col-dur">
+                                <span class="header-with-help">
+                                    Duration
+                                    <span class="help-icon" id="duration-help">?</span>
+                                </span>
+                            </th>
                             <th class="col-deps">Depends on</th>
                             <th class="col-actions"></th>
                         </tr>
@@ -92,6 +107,9 @@
 
     <!-- Error Toast -->
     <div class="toast" id="error-toast"></div>
+
+    <!-- Help Tooltip (body-level so it can't be clipped) -->
+    <div class="help-tooltip" id="help-tooltip">Calculated as (O + 4M + P) ÷ 6 using the PERT weighted average</div>
 
     <script src="app.js"></script>
 </body>

@@ -9,6 +9,7 @@
     const activityBody = document.getElementById('activity-body');
     const addBtn = document.getElementById('add-activity-btn');
     const calcBtn = document.getElementById('calculate-btn');
+    const pertToggle = document.getElementById('pert-toggle');
     const resultsSection = document.getElementById('results-section');
     const resultsBody = document.getElementById('results-body');
     const summaryBox = document.getElementById('summary-box');
@@ -30,6 +31,9 @@
     function addActivity() {
         activities.push({
             name: '',
+            optimistic: '',
+            mostLikely: '',
+            pessimistic: '',
             duration: '',
             dependencies: []
         });
@@ -58,6 +62,7 @@
 
     function renderTable() {
         activityBody.innerHTML = '';
+        const isPert = pertToggle.checked;
 
         activities.forEach((activity, i) => {
             const id = generateId(i);
@@ -76,17 +81,44 @@
             nameTd.appendChild(nameInput);
             tr.appendChild(nameTd);
 
+            // PERT fields
+            if (isPert) {
+                ['optimistic', 'mostLikely', 'pessimistic'].forEach(field => {
+                    const td = document.createElement('td');
+                    td.classList.add('pert-col');
+                    const input = document.createElement('input');
+                    input.type = 'number';
+                    input.min = '0';
+                    input.step = 'any';
+                    input.value = activity[field];
+                    input.addEventListener('input', e => {
+                        activity[field] = e.target.value;
+                        updateDuration(i);
+                    });
+                    td.appendChild(input);
+                    tr.appendChild(td);
+                });
+            }
+
             // Duration
             const durTd = document.createElement('td');
-            const durInput = document.createElement('input');
-            durInput.type = 'number';
-            durInput.min = '0';
-            durInput.step = 'any';
-            durInput.value = activity.duration || '';
-            durInput.addEventListener('input', e => {
-                activity.duration = e.target.value ? parseFloat(e.target.value) : '';
-            });
-            durTd.appendChild(durInput);
+            durTd.classList.add('duration-cell');
+            if (isPert) {
+                const dur = calcPertDuration(activity);
+                durTd.textContent = dur !== null ? dur.toFixed(1) : '—';
+                activity.duration = dur;
+            } else {
+                const durInput = document.createElement('input');
+                durInput.type = 'number';
+                durInput.min = '0';
+                durInput.step = 'any';
+                durInput.value = activity.duration || '';
+                durInput.addEventListener('input', e => {
+                    activity.duration = e.target.value ? parseFloat(e.target.value) : '';
+                });
+                durTd.appendChild(durInput);
+                durTd.classList.remove('duration-cell');
+            }
             tr.appendChild(durTd);
 
             // Dependencies
@@ -159,6 +191,24 @@
 
             activityBody.appendChild(tr);
         });
+    }
+
+    function updateDuration(index) {
+        const dur = calcPertDuration(activities[index]);
+        activities[index].duration = dur;
+        const rows = activityBody.querySelectorAll('tr');
+        if (rows[index]) {
+            const durCell = rows[index].querySelector('.duration-cell');
+            if (durCell) durCell.textContent = dur !== null ? dur.toFixed(1) : '—';
+        }
+    }
+
+    function calcPertDuration(activity) {
+        const o = parseFloat(activity.optimistic);
+        const m = parseFloat(activity.mostLikely);
+        const p = parseFloat(activity.pessimistic);
+        if (isNaN(o) || isNaN(m) || isNaN(p)) return null;
+        return (o + 4 * m + p) / 6;
     }
 
     // --- CPM Algorithm ---
@@ -611,13 +661,38 @@
         setTimeout(() => toast.classList.remove('visible'), 3000);
     }
 
+    // --- PERT toggle ---
+    function handlePertToggle() {
+        if (pertToggle.checked) {
+            document.body.classList.remove('no-pert');
+        } else {
+            document.body.classList.add('no-pert');
+        }
+        renderTable();
+    }
+
     // --- Event listeners ---
     addBtn.addEventListener('click', addActivity);
     calcBtn.addEventListener('click', calculate);
+    pertToggle.addEventListener('change', handlePertToggle);
     expandBtn.addEventListener('click', () => modal.classList.add('active'));
     modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
     modal.addEventListener('click', e => {
         if (e.target === modal) modal.classList.remove('active');
+    });
+
+    // Help tooltip positioning
+    const helpIcon = document.getElementById('duration-help');
+    const helpTooltip = document.getElementById('help-tooltip');
+    helpIcon.addEventListener('mouseenter', () => {
+        const rect = helpIcon.getBoundingClientRect();
+        helpTooltip.style.left = (rect.left + rect.width / 2) + 'px';
+        helpTooltip.style.top = (rect.top - 8) + 'px';
+        helpTooltip.style.transform = 'translate(-50%, -100%)';
+        helpTooltip.classList.add('visible');
+    });
+    helpIcon.addEventListener('mouseleave', () => {
+        helpTooltip.classList.remove('visible');
     });
 
     // Escape to close modal
@@ -629,12 +704,16 @@
 
     // --- Initialise with sample data ---
     activities = [
-        { name: 'Requirements Gathering', duration: 3, dependencies: [] },
-        { name: 'UI Design', duration: 4, dependencies: ['A'] },
-        { name: 'Database Design', duration: 5, dependencies: ['A'] },
-        { name: 'Backend Development', duration: 7, dependencies: ['B', 'C'] },
-        { name: 'Testing', duration: 3, dependencies: ['D'] }
+        { name: 'Requirements Gathering', optimistic: '2', mostLikely: '3', pessimistic: '5', duration: null, dependencies: [] },
+        { name: 'UI Design', optimistic: '3', mostLikely: '4', pessimistic: '7', duration: null, dependencies: ['A'] },
+        { name: 'Database Design', optimistic: '2', mostLikely: '5', pessimistic: '6', duration: null, dependencies: ['A'] },
+        { name: 'Backend Development', optimistic: '5', mostLikely: '7', pessimistic: '12', duration: null, dependencies: ['B', 'C'] },
+        { name: 'Testing', optimistic: '2', mostLikely: '3', pessimistic: '5', duration: null, dependencies: ['D'] }
     ];
 
+    // Calculate initial PERT durations
+    activities.forEach(a => { a.duration = calcPertDuration(a); });
+
+    handlePertToggle();
     renderTable();
 })();

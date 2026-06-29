@@ -33,3 +33,89 @@ body {
 
 h1 { font-size: 1.5rem; margin-bottom: 4px; color: var(--imdb-black); }
 .subtitle { color: var(--text-muted); margin-bottom: 24px; font-size: 0.9rem; }
+
+/* Sections */
+.section {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    position: relative;
+}
+
+.section-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text);
+}
+
+.badge {
+    background: rgba(245, 197, 24, 0.15);
+    color: var(--imdb-gold);
+    font-size: 0.7rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
+}
+
+/* Tables */
+.table-wrapper { overflow-x: auto; overflow-y: visible; }
+
+table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+
+th {
+    background: var(--surface-alt);
+    padding: 10px 12px;
+    text-align: left;
+    font-weight: 600;
+    border-bottom: 2px solid var(--border);
+    white-space: nowrap;
+    color: var(--text-muted);
+    position: relative;
+    overflow: visible;
+}
+
+td { padding: 8px 12px; border-bottom: 1px solid var(--border); }
+
+.col-id { width: 50px; }
+.col-name { min-width: 160px; }
+.col-est { width: 90px; }
+.col-dur { width: 90px; }
+.col-deps { min-width: 120px; }
+.col-actions { width: 40px; }
+
+/* Buttons */
+.btn-row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+.spacer { flex: 1; }
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--imdb-gold);
+    border: 1px solid var(--imdb-gold);
+}
+
+.btn-secondary:hover { background: rgba(245, 197, 24, 0.1); }
+
+.btn-success {
+    background: var(--imdb-gold);
+    color: var(--imdb-black);
+    font-size: 1rem;
+    padding: 10px 24px;
+    font-weight: 700;
+}
+
+.btn-success:hover { background: #e6b800; }

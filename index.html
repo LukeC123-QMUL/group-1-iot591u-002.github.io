@@ -10,6 +10,33 @@
     <div class="container">
         <h1>Critical Path Calculator</h1>
         <p class="subtitle">Enter project activities to calculate the critical path, float times, and visualise the network diagram.</p>
+
+        <!-- Section 1: Activity Input -->
+        <div class="section">
+            <div class="section-title">
+                <span>1. Define Activities</span>
+                <span class="badge">Input</span>
+            </div>
+            <div class="table-wrapper">
+                <table id="activity-table">
+                    <thead>
+                        <tr>
+                            <th class="col-id">ID</th>
+                            <th class="col-name">Activity Name</th>
+                            <th class="col-dur">Duration</th>
+                            <th class="col-deps">Depends on</th>
+                            <th class="col-actions"></th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-body"></tbody>
+                </table>
+            </div>
+            <div class="btn-row">
+                <button class="btn btn-secondary" id="add-activity-btn">+ Add Activity</button>
+                <div class="spacer"></div>
+                <button class="btn btn-success" id="calculate-btn">▶ Calculate Critical Path</button>
+            </div>
+        </div>
     </div>
 
     <script src="app.js"></script>

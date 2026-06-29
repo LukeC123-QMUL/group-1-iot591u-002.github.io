@@ -37,6 +37,32 @@
                 <button class="btn btn-success" id="calculate-btn">▶ Calculate Critical Path</button>
             </div>
         </div>
+
+        <!-- Section 2: Results -->
+        <div class="section" id="results-section" style="display:none;">
+            <div class="section-title">
+                <span>2. Calculation Results</span>
+                <span class="badge">Output</span>
+            </div>
+            <div class="table-wrapper">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Duration</th>
+                            <th>Early Start (ES)</th>
+                            <th>Early Finish (EF)</th>
+                            <th>Late Start (LS)</th>
+                            <th>Late Finish (LF)</th>
+                            <th>Total Float (TF)</th>
+                            <th>Free Float (FF)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="results-body"></tbody>
+                </table>
+            </div>
+            <div id="summary-box" class="summary-box"></div>
+        </div>
     </div>
 
     <!-- Error Toast -->

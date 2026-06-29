@@ -12,6 +12,8 @@
     const resultsSection = document.getElementById('results-section');
     const resultsBody = document.getElementById('results-body');
     const summaryBox = document.getElementById('summary-box');
+    const diagramSection = document.getElementById('diagram-section');
+    const diagramArea = document.getElementById('diagram-area');
     const toast = document.getElementById('error-toast');
 
     // --- ID generation ---
@@ -240,6 +242,7 @@
 
         results = { nodes, projectDuration, sorted };
         renderResults();
+        renderDiagram();
     }
 
     function hasCycle() {
@@ -288,6 +291,7 @@
     // --- Results rendering ---
     function renderResults() {
         resultsSection.style.display = '';
+        diagramSection.style.display = '';
         resultsBody.innerHTML = '';
 
         const { nodes, projectDuration } = results;
@@ -343,6 +347,247 @@
 
         if (starts.length > 0) walk(starts[0]);
         return path;
+    }
+
+    // --- Diagram rendering ---
+    function renderDiagram() {
+        const { nodes } = results;
+        const svg = buildDiagramSVG(nodes);
+        diagramArea.innerHTML = '';
+        diagramArea.appendChild(svg);
+    }
+
+    function buildDiagramSVG(nodes) {
+        // Assign layers (x-position based on longest path from start)
+        const layers = {};
+        const nodeMap = {};
+        nodes.forEach(n => { nodeMap[n.id] = n; });
+
+        function getLayer(node) {
+            if (layers[node.id] !== undefined) return layers[node.id];
+            if (node.dependencies.length === 0) {
+                layers[node.id] = 0;
+                return 0;
+            }
+            const maxDepLayer = Math.max(...node.dependencies.map(d => getLayer(nodeMap[d])));
+            layers[node.id] = maxDepLayer + 1;
+            return layers[node.id];
+        }
+
+        nodes.forEach(n => getLayer(n));
+
+        // Group by layer
+        const layerGroups = {};
+        nodes.forEach(n => {
+            const l = layers[n.id];
+            if (!layerGroups[l]) layerGroups[l] = [];
+            layerGroups[l].push(n);
+        });
+
+        const numLayers = Math.max(...Object.keys(layerGroups).map(Number)) + 1;
+        const nodeWidth = 140;
+        const nodeHeight = 100;
+        const hGap = 80;
+        const vGap = 40;
+
+        // Calculate positions
+        const positions = {};
+        const maxNodesInLayer = Math.max(...Object.values(layerGroups).map(g => g.length));
+        const totalHeight = maxNodesInLayer * (nodeHeight + vGap) - vGap;
+        const totalWidth = numLayers * (nodeWidth + hGap) - hGap;
+
+        Object.entries(layerGroups).forEach(([layer, group]) => {
+            const l = Number(layer);
+            const groupHeight = group.length * (nodeHeight + vGap) - vGap;
+            const startY = (totalHeight - groupHeight) / 2;
+            group.forEach((node, idx) => {
+                positions[node.id] = {
+                    x: l * (nodeWidth + hGap) + 20,
+                    y: startY + idx * (nodeHeight + vGap) + 20
+                };
+            });
+        });
+
+        const svgWidth = totalWidth + 60;
+        const svgHeight = totalHeight + 60;
+
+        const ns = 'http://www.w3.org/2000/svg';
+        const svg = document.createElementNS(ns, 'svg');
+        svg.setAttribute('viewBox', `0 0 ${svgWidth} ${svgHeight}`);
+        svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+        svg.style.width = '100%';
+        svg.style.height = `${Math.max(svgHeight, 300)}px`;
+
+        // Defs for arrowheads
+        const defs = document.createElementNS(ns, 'defs');
+        defs.innerHTML = `
+            <marker id="ah-crit" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#bd2404"/>
+            </marker>
+            <marker id="ah-norm" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#007207"/>
+            </marker>
+        `;
+        svg.appendChild(defs);
+
+        // Draw arrows first (behind nodes)
+        nodes.forEach(node => {
+            node.dependencies.forEach(depId => {
+                const from = positions[depId];
+                const to = positions[node.id];
+                const isCritEdge = node.critical && nodeMap[depId].critical;
+
+                const startX = from.x + nodeWidth;
+                const startY = from.y + nodeHeight / 2;
+                const endX = to.x;
+                const endY = to.y + nodeHeight / 2;
+
+                const midX = (startX + endX) / 2;
+
+                const path = document.createElementNS(ns, 'path');
+                path.setAttribute('d', `M ${startX} ${startY} C ${midX} ${startY}, ${midX} ${endY}, ${endX} ${endY}`);
+                path.setAttribute('fill', 'none');
+                path.setAttribute('stroke', isCritEdge ? '#bd2404' : '#007207');
+                path.setAttribute('stroke-width', isCritEdge ? '2.5' : '1.5');
+                path.setAttribute('marker-end', isCritEdge ? 'url(#ah-crit)' : 'url(#ah-norm)');
+                svg.appendChild(path);
+            });
+        });
+
+        // Draw nodes
+        nodes.forEach(node => {
+            const pos = positions[node.id];
+            const g = document.createElementNS(ns, 'g');
+            const round = v => Math.round(v * 10) / 10;
+
+            const isCrit = node.critical;
+            const borderColor = isCrit ? '#bd2404' : '#007207';
+            const headerFill = isCrit ? 'rgba(189,36,4,0.2)' : 'rgba(0,114,7,0.2)';
+            const textColor = isCrit ? '#e84c2b' : '#2db84d';
+
+            // Background
+            const bg = document.createElementNS(ns, 'rect');
+            bg.setAttribute('x', pos.x); bg.setAttribute('y', pos.y);
+            bg.setAttribute('width', nodeWidth); bg.setAttribute('height', nodeHeight);
+            bg.setAttribute('rx', '6'); bg.setAttribute('fill', '#ffffff');
+            g.appendChild(bg);
+
+            // Header (flat bottom corners)
+            const header = document.createElementNS(ns, 'path');
+            const hx = pos.x; const hy = pos.y;
+            header.setAttribute('d', `M${hx+6},${hy} h${nodeWidth-12} a6,6 0 0 1 6,6 v20 h-${nodeWidth} v-20 a6,6 0 0 1 6,-6 z`);
+            header.setAttribute('fill', headerFill);
+            g.appendChild(header);
+
+            // Header separator
+            const sep = document.createElementNS(ns, 'line');
+            sep.setAttribute('x1', hx+1); sep.setAttribute('y1', hy+26);
+            sep.setAttribute('x2', hx+nodeWidth-1); sep.setAttribute('y2', hy+26);
+            sep.setAttribute('stroke', '#e0e0e0'); sep.setAttribute('stroke-width', '1');
+            g.appendChild(sep);
+
+            // Header text (ID label)
+            const headerText = document.createElementNS(ns, 'text');
+            headerText.setAttribute('x', hx + nodeWidth/2); headerText.setAttribute('y', hy + 17);
+            headerText.setAttribute('text-anchor', 'middle'); headerText.setAttribute('font-size', '11');
+            headerText.setAttribute('font-weight', '700'); headerText.setAttribute('fill', textColor);
+            headerText.setAttribute('font-family', '-apple-system, sans-serif');
+            headerText.setAttribute('class', 'node-label');
+            headerText.textContent = node.id;
+            g.appendChild(headerText);
+
+            // Header text (name, hidden by default, shown on hover)
+            const nameText = document.createElementNS(ns, 'text');
+            nameText.setAttribute('x', hx + nodeWidth/2); nameText.setAttribute('y', hy + 17);
+            nameText.setAttribute('text-anchor', 'middle'); nameText.setAttribute('font-size', '8');
+            nameText.setAttribute('font-weight', '600'); nameText.setAttribute('fill', textColor);
+            nameText.setAttribute('font-family', '-apple-system, sans-serif');
+            nameText.setAttribute('class', 'node-name');
+            nameText.style.display = 'none';
+            nameText.textContent = node.name;
+            g.appendChild(nameText);
+
+            // Hover behaviour
+            g.style.cursor = 'default';
+            g.addEventListener('mouseenter', () => {
+                headerText.style.display = 'none';
+                nameText.style.display = '';
+            });
+            g.addEventListener('mouseleave', () => {
+                headerText.style.display = '';
+                nameText.style.display = 'none';
+            });
+
+            // Grid lines
+            const midX = hx + nodeWidth / 2;
+            [[hx+1, hy+26, midX-1, hy+26+18], [hx+1, hy+26+18, hx+nodeWidth-1, hy+26+18],
+             [midX, hy+26, midX, hy+26+36], [hx+1, hy+26+36, hx+nodeWidth-1, hy+26+36]].forEach(([x1,y1,x2,y2], idx) => {
+                if (idx === 0) return; // skip first, it's for the vertical
+                const line = document.createElementNS(ns, 'line');
+                line.setAttribute('x1', x1); line.setAttribute('y1', y1);
+                line.setAttribute('x2', x2); line.setAttribute('y2', y2);
+                line.setAttribute('stroke', '#e0e0e0'); line.setAttribute('stroke-width', '1');
+                g.appendChild(line);
+            });
+            // Vertical divider
+            const vLine = document.createElementNS(ns, 'line');
+            vLine.setAttribute('x1', midX); vLine.setAttribute('y1', hy+26);
+            vLine.setAttribute('x2', midX); vLine.setAttribute('y2', hy+62);
+            vLine.setAttribute('stroke', '#e0e0e0'); vLine.setAttribute('stroke-width', '1');
+            g.appendChild(vLine);
+
+            // Data
+            const dataY1 = hy + 40;
+            const dataY2 = hy + 56;
+            const leftX = hx + 8;
+            const rightX = midX + 8;
+
+            [['ES', round(node.es), leftX, dataY1], ['EF', round(node.ef), rightX, dataY1],
+             ['LS', round(node.ls), leftX, dataY2], ['LF', round(node.lf), rightX, dataY2]].forEach(([label, val, x, y]) => {
+                const lbl = document.createElementNS(ns, 'text');
+                lbl.setAttribute('x', x); lbl.setAttribute('y', y);
+                lbl.setAttribute('font-size', '8'); lbl.setAttribute('fill', '#666666');
+                lbl.setAttribute('font-family', '-apple-system, sans-serif');
+                lbl.textContent = label;
+                g.appendChild(lbl);
+
+                const valText = document.createElementNS(ns, 'text');
+                valText.setAttribute('x', x + 18); valText.setAttribute('y', y);
+                valText.setAttribute('font-size', '9'); valText.setAttribute('font-weight', '600');
+                valText.setAttribute('fill', '#161616');
+                valText.setAttribute('font-family', '-apple-system, sans-serif');
+                valText.textContent = val;
+                g.appendChild(valText);
+            });
+
+            // Duration row background
+            const durBg = document.createElementNS(ns, 'rect');
+            durBg.setAttribute('x', hx+1); durBg.setAttribute('y', hy+62);
+            durBg.setAttribute('width', nodeWidth-2); durBg.setAttribute('height', nodeHeight-62-1);
+            durBg.setAttribute('fill', '#f8f8f8');
+            g.appendChild(durBg);
+
+            // Duration text
+            const durText = document.createElementNS(ns, 'text');
+            durText.setAttribute('x', hx + nodeWidth/2); durText.setAttribute('y', hy + 82);
+            durText.setAttribute('text-anchor', 'middle'); durText.setAttribute('font-size', '10');
+            durText.setAttribute('font-weight', '600'); durText.setAttribute('fill', '#161616');
+            durText.setAttribute('font-family', '-apple-system, sans-serif');
+            durText.textContent = `Dur: ${round(node.duration)}`;
+            g.appendChild(durText);
+
+            // Border (on top)
+            const border = document.createElementNS(ns, 'rect');
+            border.setAttribute('x', pos.x); border.setAttribute('y', pos.y);
+            border.setAttribute('width', nodeWidth); border.setAttribute('height', nodeHeight);
+            border.setAttribute('rx', '6'); border.setAttribute('fill', 'none');
+            border.setAttribute('stroke', borderColor); border.setAttribute('stroke-width', '2');
+            g.appendChild(border);
+
+            svg.appendChild(g);
+        });
+
+        return svg;
     }
 
     // --- Toast ---

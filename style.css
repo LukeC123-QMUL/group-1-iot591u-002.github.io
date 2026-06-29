@@ -232,6 +232,43 @@ td input[type="number"] { text-align: center; }
     line-height: 1.6;
 }
 
+/* Diagram */
+.expand-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: var(--surface-alt);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    z-index: 5;
+}
+
+.expand-btn:hover { background: var(--border); color: var(--text); }
+
+.diagram-area {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    min-height: 200px;
+    overflow-x: auto;
+    padding: 20px;
+}
+
+.diagram-area svg { display: block; }
+
+.legend { display: flex; gap: 16px; margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); }
+.legend-item { display: flex; align-items: center; gap: 6px; }
+.legend-swatch { width: 16px; height: 16px; border-radius: 3px; border: 2px solid; }
+.legend-swatch.critical { border-color: var(--imdb-red); background: rgba(189, 36, 4, 0.15); }
+.legend-swatch.normal { border-color: var(--imdb-green); background: rgba(0, 114, 7, 0.15); }
+
 /* Toast */
 .toast {
     position: fixed;

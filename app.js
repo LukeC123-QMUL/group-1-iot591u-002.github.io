@@ -14,6 +14,10 @@
     const summaryBox = document.getElementById('summary-box');
     const diagramSection = document.getElementById('diagram-section');
     const diagramArea = document.getElementById('diagram-area');
+    const expandBtn = document.getElementById('expand-btn');
+    const modal = document.getElementById('diagram-modal');
+    const modalDiagram = document.getElementById('modal-diagram');
+    const modalCloseBtn = document.getElementById('modal-close-btn');
     const toast = document.getElementById('error-toast');
 
     // --- ID generation ---
@@ -355,6 +359,16 @@
         const svg = buildDiagramSVG(nodes);
         diagramArea.innerHTML = '';
         diagramArea.appendChild(svg);
+
+        // Modal gets its own SVG built fresh
+        modalDiagram.innerHTML = '';
+        const modalSvg = buildDiagramSVG(nodes);
+        modalSvg.style.width = '100%';
+        modalSvg.style.height = '100%';
+        modalSvg.removeAttribute('style');
+        modalSvg.style.width = '100%';
+        modalSvg.style.height = '100%';
+        modalDiagram.appendChild(modalSvg);
     }
 
     function buildDiagramSVG(nodes) {
@@ -600,6 +614,18 @@
     // --- Event listeners ---
     addBtn.addEventListener('click', addActivity);
     calcBtn.addEventListener('click', calculate);
+    expandBtn.addEventListener('click', () => modal.classList.add('active'));
+    modalCloseBtn.addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', e => {
+        if (e.target === modal) modal.classList.remove('active');
+    });
+
+    // Escape to close modal
+    document.addEventListener('keydown', e => {
+        if (e.key === 'Escape' && modal.classList.contains('active')) {
+            modal.classList.remove('active');
+        }
+    });
 
     // --- Initialise with sample data ---
     activities = [
